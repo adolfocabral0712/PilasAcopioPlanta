@@ -933,9 +933,6 @@
 
     <section class="seccion-resumen">
       <h2 class="titulo-seccion">Resumen por origen y producto</h2>
-      <p class="subtitulo-seccion">
-        Metros cúbicos ajustados según el porcentaje de estado de cada pila.
-      </p>
 
       <div class="panel-tabla">
         <div class="tabla-scroll">
@@ -951,10 +948,6 @@
           </table>
         </div>
 
-        <div class="pie-tabla">
-          <span id="cantidadResumen">0 combinaciones mostradas</span>
-          <span id="totalResumenM3">Total: 0,00 m³</span>
-        </div>
       </div>
     </section>
   </main>
@@ -991,9 +984,7 @@
       btnLimpiar: document.getElementById("btnLimpiar"),
       cuerpoTabla: document.getElementById("cuerpoTabla"),
       cantidadMostrada: document.getElementById("cantidadMostrada"),
-      cuerpoResumen: document.getElementById("cuerpoResumen"),
-      cantidadResumen: document.getElementById("cantidadResumen"),
-      totalResumenM3: document.getElementById("totalResumenM3")
+      cuerpoResumen: document.getElementById("cuerpoResumen")
     };
 
     // ============================================================
@@ -1594,8 +1585,6 @@
             </td>
           </tr>
         `;
-        elementos.cantidadResumen.textContent = "0 combinaciones mostradas";
-        elementos.totalResumenM3.textContent = "Total: 0,00 m³";
         return;
       }
 
@@ -1617,13 +1606,6 @@
         </tr>
       `;
 
-      elementos.cantidadResumen.textContent =
-        `${resumen.length} ${resumen.length === 1
-          ? "combinación mostrada"
-          : "combinaciones mostradas"}`;
-
-      elementos.totalResumenM3.textContent =
-        `Total: ${formatearNumero(totalM3, 2)} m³`;
     }
 
     function actualizarVista() {
