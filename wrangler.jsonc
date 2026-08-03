@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
 
-  "name": "pilas-cancha-stock",
+  "name": "pilas-acopio-stock",
 
   "main": "src/index.js",
 
