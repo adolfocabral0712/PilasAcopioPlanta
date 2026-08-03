@@ -266,13 +266,41 @@
       display: inline-block;
       min-width: 66px;
       padding: 6px 10px;
-      border: 1px solid rgba(71, 194, 255, 0.35);
+      border: 1px solid transparent;
       border-radius: 999px;
-      background: rgba(71, 194, 255, 0.10);
-      color: var(--acento);
       font-size: 13px;
       font-weight: 800;
       white-space: nowrap;
+    }
+
+    .estado-verde {
+      background: rgba(57, 217, 138, 0.16);
+      border-color: rgba(57, 217, 138, 0.55);
+      color: #6df0ad;
+    }
+
+    .estado-amarillo {
+      background: rgba(255, 200, 87, 0.16);
+      border-color: rgba(255, 200, 87, 0.55);
+      color: #ffd978;
+    }
+
+    .estado-naranja {
+      background: rgba(255, 145, 77, 0.16);
+      border-color: rgba(255, 145, 77, 0.55);
+      color: #ffad73;
+    }
+
+    .estado-rojo {
+      background: rgba(255, 107, 107, 0.16);
+      border-color: rgba(255, 107, 107, 0.55);
+      color: #ff8f8f;
+    }
+
+    .estado-sin-dato {
+      background: rgba(158, 176, 199, 0.12);
+      border-color: rgba(158, 176, 199, 0.35);
+      color: var(--texto-suave);
     }
 
     .lista {
@@ -1070,6 +1098,37 @@
         : Math.max(0, numero);
     }
 
+    function obtenerClaseEstado(valorEstado) {
+      if (valorEstado === null || valorEstado === undefined || valorEstado === "") {
+        return "estado-sin-dato";
+      }
+
+      const texto = String(valorEstado)
+        .trim()
+        .replace("%", "")
+        .replace(",", ".");
+
+      const porcentaje = Number(texto);
+
+      if (!Number.isFinite(porcentaje)) {
+        return "estado-sin-dato";
+      }
+
+      if (porcentaje >= 100) {
+        return "estado-verde";
+      }
+
+      if (porcentaje >= 60) {
+        return "estado-amarillo";
+      }
+
+      if (porcentaje >= 30) {
+        return "estado-naranja";
+      }
+
+      return "estado-rojo";
+    }
+
     function ordenarNatural(a, b) {
       return String(a).localeCompare(String(b), "es", {
         numeric: true,
@@ -1509,7 +1568,9 @@
               <td class="pila">${escaparHtml(item.pila)}</td>
               <td>${escaparHtml(item.fechaInicio || "-")}</td>
               <td>
-                <span class="estado-pila">${escaparHtml(item.estado || "-")}</span>
+                <span class="estado-pila ${obtenerClaseEstado(item.estado)}">
+                  ${escaparHtml(item.estado || "-")}
+                </span>
               </td>
               <td
                 class="m3"
