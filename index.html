@@ -262,6 +262,19 @@
       white-space: nowrap;
     }
 
+    .estado-pila {
+      display: inline-block;
+      min-width: 66px;
+      padding: 6px 10px;
+      border: 1px solid rgba(71, 194, 255, 0.35);
+      border-radius: 999px;
+      background: rgba(71, 194, 255, 0.10);
+      color: var(--acento);
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
     .lista {
       max-width: 360px;
       line-height: 1.45;
@@ -393,6 +406,32 @@
       font-size: 12px;
     }
 
+    .seccion-resumen {
+      margin-top: 20px;
+    }
+
+    .titulo-seccion {
+      margin: 0 0 12px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .subtitulo-seccion {
+      margin: -5px 0 14px;
+      color: var(--texto-suave);
+      font-size: 13px;
+    }
+
+    .tabla-resumen td:first-child,
+    .tabla-resumen td:nth-child(2) {
+      text-align: left;
+    }
+
+    .tabla-resumen .total-resumen td {
+      background: #17243a;
+      font-weight: 800;
+    }
+
     .vacio {
       padding: 35px 20px !important;
       color: var(--texto-suave);
@@ -516,7 +555,8 @@
             <tr>
               <th>Pila</th>
               <th>Fecha inicio</th>
-              <th>Metros cúbicos</th>
+              <th>Estado</th>
+              <th>Metros cúbicos según estado</th>
               <th>Densidad promedio</th>
               <th>Origen</th>
               <th>Producto</th>
@@ -530,7 +570,34 @@
 
       <div class="pie-tabla">
         <span id="cantidadMostrada">0 pilas mostradas</span>
-        <span>Vinculación: PILA = primero_de_pila</span>
+        <span>M³ ajustados por ESTADO %</span>
+      </div>
+    </section>
+
+    <section class="seccion-resumen">
+      <h2 class="titulo-seccion">Resumen por origen y producto</h2>
+      <p class="subtitulo-seccion">
+        Metros cúbicos ajustados según el porcentaje de estado de cada pila.
+      </p>
+
+      <div class="panel-tabla">
+        <div class="tabla-scroll">
+          <table class="tabla-resumen">
+            <thead>
+              <tr>
+                <th>Origen</th>
+                <th>Producto</th>
+                <th>Metros cúbicos</th>
+              </tr>
+            </thead>
+            <tbody id="cuerpoResumen"></tbody>
+          </table>
+        </div>
+
+        <div class="pie-tabla">
+          <span id="cantidadResumen">0 combinaciones mostradas</span>
+          <span id="totalResumenM3">Total: 0,00 m³</span>
+        </div>
       </div>
     </section>
   </main>
@@ -566,7 +633,10 @@
       filtroProducto: document.getElementById("filtroProducto"),
       btnLimpiar: document.getElementById("btnLimpiar"),
       cuerpoTabla: document.getElementById("cuerpoTabla"),
-      cantidadMostrada: document.getElementById("cantidadMostrada")
+      cantidadMostrada: document.getElementById("cantidadMostrada"),
+      cuerpoResumen: document.getElementById("cuerpoResumen"),
+      cantidadResumen: document.getElementById("cantidadResumen"),
+      totalResumenM3: document.getElementById("totalResumenM3")
     };
 
     // ============================================================
@@ -619,6 +689,37 @@
     function obtenerDensidadValida(movimiento) {
       const densidad = aNumero(movimiento.densidad);
       return densidad > 0 ? densidad : null;
+    }
+
+    function obtenerFactorEstado(valorEstado) {
+      if (valorEstado === null || valorEstado === undefined || valorEstado === "") {
+        return 1;
+      }
+
+      if (typeof valorEstado === "number") {
+        if (!Number.isFinite(valorEstado)) {
+          return 1;
+        }
+
+        return valorEstado > 1
+          ? Math.max(0, valorEstado / 100)
+          : Math.max(0, valorEstado);
+      }
+
+      const texto = String(valorEstado)
+        .trim()
+        .replace("%", "")
+        .replace(",", ".");
+
+      const numero = Number(texto);
+
+      if (!Number.isFinite(numero)) {
+        return 1;
+      }
+
+      return numero > 1
+        ? Math.max(0, numero / 100)
+        : Math.max(0, numero);
     }
 
     function ordenarNatural(a, b) {
@@ -712,6 +813,12 @@
             registroStock["FECHA INICIO"] ?? ""
           ).trim();
           const fechaInicio = convertirFecha(fechaInicioTexto);
+          const estado = String(
+            registroStock["ESTADO %"] ?? registroStock.ESTADO ?? ""
+          ).trim();
+          const factorEstado = obtenerFactorEstado(
+            registroStock["ESTADO %"] ?? registroStock.ESTADO
+          );
 
           const movimientosValidos = movimientos.filter(movimiento => {
             const mismaPila =
@@ -736,9 +843,11 @@
           const densidades = [];
           const detallePorOrigen = new Map();
           let metrosCubicos = 0;
+          let metrosCubicosOriginales = 0;
 
           for (const movimiento of movimientosValidos) {
-            const m3 = aNumero(movimiento.metros_cubicos);
+            const m3Original = aNumero(movimiento.metros_cubicos);
+            const m3 = m3Original * factorEstado;
             const origen =
               String(movimiento.origen ?? "").trim() || "Sin origen";
             const producto =
@@ -746,6 +855,7 @@
             const remito = movimiento.remito;
             const densidadValida = obtenerDensidadValida(movimiento);
 
+            metrosCubicosOriginales += m3Original;
             metrosCubicos += m3;
             origenes.add(origen);
             productos.add(producto);
@@ -766,13 +876,23 @@
                 metrosCubicos: 0,
                 productos: new Set(),
                 remitos: new Set(),
-                densidades: []
+                densidades: [],
+                detalleProductos: new Map()
               });
             }
 
             const subtotal = detallePorOrigen.get(claveOrigen);
             subtotal.metrosCubicos += m3;
             subtotal.productos.add(producto);
+
+            const claveProducto = normalizarTexto(producto);
+            if (!subtotal.detalleProductos.has(claveProducto)) {
+              subtotal.detalleProductos.set(claveProducto, {
+                producto,
+                metrosCubicos: 0
+              });
+            }
+            subtotal.detalleProductos.get(claveProducto).metrosCubicos += m3;
 
             if (densidadValida !== null) {
               subtotal.densidades.push(densidadValida);
@@ -792,7 +912,9 @@
               densidadPromedio: item.densidades.length > 0
                 ? item.densidades.reduce((suma, valor) => suma + valor, 0) /
                   item.densidades.length
-                : null
+                : null,
+              detalleProductos: [...item.detalleProductos.values()]
+                .sort((a, b) => ordenarNatural(a.producto, b.producto))
             }))
             .sort((a, b) => {
               const diferencia = b.metrosCubicos - a.metrosCubicos;
@@ -805,6 +927,7 @@
             pila: pilaOriginal,
             fechaInicio: fechaInicioTexto,
             fechaInicioValida: Boolean(fechaInicio),
+            estado,
             metrosCubicos,
             densidadPromedio: densidades.length > 0
               ? densidades.reduce((suma, valor) => suma + valor, 0) /
@@ -935,7 +1058,7 @@
 
       return `
         <tr id="detalle-origen-${indice}" class="fila-detalle-origen">
-          <td colspan="7" class="celda-detalle-origen">
+          <td colspan="8" class="celda-detalle-origen">
             <div class="detalle-origen-contenedor">
               <div class="detalle-origen-titulo">
                 Subtotales de la pila ${escaparHtml(item.pila)} por origen
@@ -1021,7 +1144,7 @@
       if (datos.length === 0) {
         elementos.cuerpoTabla.innerHTML = `
           <tr>
-            <td colspan="7" class="vacio">
+            <td colspan="8" class="vacio">
               No se encontraron pilas para los filtros seleccionados.
             </td>
           </tr>
@@ -1037,7 +1160,15 @@
             <tr>
               <td class="pila">${escaparHtml(item.pila)}</td>
               <td>${escaparHtml(item.fechaInicio || "-")}</td>
-              <td class="m3">${formatearNumero(item.metrosCubicos, 2)} m³</td>
+              <td>
+                <span class="estado-pila">${escaparHtml(item.estado || "-")}</span>
+              </td>
+              <td
+                class="m3"
+                title="M³ originales: ${formatearNumero(item.metrosCubicosOriginales, 2)} · Estado aplicado: ${escaparHtml(item.estado || "100%")}"
+              >
+                ${formatearNumero(item.metrosCubicos, 2)} m³
+              </td>
               <td class="densidad">${
                 item.densidadPromedio !== null
                   ? formatearNumero(item.densidadPromedio, 3)
@@ -1059,10 +1190,90 @@
         `${datos.length} ${datos.length === 1 ? "pila mostrada" : "pilas mostradas"}`;
     }
 
+    function construirResumenOrigenProducto(datos) {
+      const mapa = new Map();
+
+      for (const item of datos) {
+        for (const subtotalOrigen of item.subtotalesOrigen || []) {
+          for (const detalleProducto of subtotalOrigen.detalleProductos || []) {
+            const clave = [
+              normalizarTexto(subtotalOrigen.origen),
+              normalizarTexto(detalleProducto.producto)
+            ].join("||");
+
+            if (!mapa.has(clave)) {
+              mapa.set(clave, {
+                origen: subtotalOrigen.origen,
+                producto: detalleProducto.producto,
+                metrosCubicos: 0
+              });
+            }
+
+            mapa.get(clave).metrosCubicos += detalleProducto.metrosCubicos;
+          }
+        }
+      }
+
+      return [...mapa.values()].sort((a, b) => {
+        const porOrigen = ordenarNatural(a.origen, b.origen);
+        return porOrigen !== 0
+          ? porOrigen
+          : ordenarNatural(a.producto, b.producto);
+      });
+    }
+
+    function renderizarResumenOrigenProducto(datos) {
+      const resumen = construirResumenOrigenProducto(datos);
+      const totalM3 = resumen.reduce(
+        (suma, item) => suma + item.metrosCubicos,
+        0
+      );
+
+      if (resumen.length === 0) {
+        elementos.cuerpoResumen.innerHTML = `
+          <tr>
+            <td colspan="3" class="vacio">
+              No hay datos para los filtros seleccionados.
+            </td>
+          </tr>
+        `;
+        elementos.cantidadResumen.textContent = "0 combinaciones mostradas";
+        elementos.totalResumenM3.textContent = "Total: 0,00 m³";
+        return;
+      }
+
+      const filas = resumen
+        .map(item => `
+          <tr>
+            <td>${escaparHtml(item.origen)}</td>
+            <td>${escaparHtml(item.producto)}</td>
+            <td class="m3">${formatearNumero(item.metrosCubicos, 2)} m³</td>
+          </tr>
+        `)
+        .join("");
+
+      elementos.cuerpoResumen.innerHTML = `
+        ${filas}
+        <tr class="total-resumen">
+          <td colspan="2">TOTAL</td>
+          <td class="m3">${formatearNumero(totalM3, 2)} m³</td>
+        </tr>
+      `;
+
+      elementos.cantidadResumen.textContent =
+        `${resumen.length} ${resumen.length === 1
+          ? "combinación mostrada"
+          : "combinaciones mostradas"}`;
+
+      elementos.totalResumenM3.textContent =
+        `Total: ${formatearNumero(totalM3, 2)} m³`;
+    }
+
     function actualizarVista() {
       const filtrados = obtenerDatosFiltrados();
       actualizarKpis(filtrados);
       renderizarTabla(filtrados);
+      renderizarResumenOrigenProducto(filtrados);
     }
 
     function mostrarEstado(mensaje, esError = false) {
