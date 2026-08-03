@@ -475,6 +475,125 @@
         padding: 15px;
       }
     }
+  
+    /* Ajuste específico para la tabla resumen inferior */
+    .tabla-resumen {
+      width: 100%;
+      min-width: 0;
+      table-layout: fixed;
+    }
+
+    .tabla-resumen th:nth-child(1),
+    .tabla-resumen td:nth-child(1) {
+      width: 42%;
+    }
+
+    .tabla-resumen th:nth-child(2),
+    .tabla-resumen td:nth-child(2) {
+      width: 34%;
+    }
+
+    .tabla-resumen th:nth-child(3),
+    .tabla-resumen td:nth-child(3) {
+      width: 24%;
+    }
+
+    .tabla-resumen th,
+    .tabla-resumen td {
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .tabla-resumen td:nth-child(3),
+    .tabla-resumen th:nth-child(3) {
+      text-align: right;
+    }
+
+    .seccion-resumen .tabla-scroll {
+      overflow-x: visible;
+    }
+
+    @media (max-width: 650px) {
+      .seccion-resumen {
+        margin-top: 16px;
+      }
+
+      .titulo-seccion {
+        font-size: 18px;
+        line-height: 1.2;
+      }
+
+      .subtitulo-seccion {
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .seccion-resumen .panel-tabla {
+        border-radius: 12px;
+      }
+
+      .tabla-resumen {
+        min-width: 0 !important;
+        width: 100% !important;
+        table-layout: fixed;
+      }
+
+      .tabla-resumen th {
+        padding: 10px 6px;
+        font-size: 10px;
+        letter-spacing: 0.02em;
+      }
+
+      .tabla-resumen td {
+        padding: 11px 6px;
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .tabla-resumen th:nth-child(1),
+      .tabla-resumen td:nth-child(1) {
+        width: 40%;
+      }
+
+      .tabla-resumen th:nth-child(2),
+      .tabla-resumen td:nth-child(2) {
+        width: 35%;
+      }
+
+      .tabla-resumen th:nth-child(3),
+      .tabla-resumen td:nth-child(3) {
+        width: 25%;
+      }
+
+      .tabla-resumen .m3 {
+        font-size: 11px;
+        white-space: normal;
+      }
+
+      .tabla-resumen .total-resumen td {
+        font-size: 11px;
+      }
+
+      .seccion-resumen .pie-tabla {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+        padding: 10px 12px;
+        font-size: 11px;
+      }
+
+      .seccion-resumen .pie-tabla span {
+        width: 100%;
+        text-align: left;
+      }
+
+      .seccion-resumen .pie-tabla span:last-child {
+        text-align: right;
+        font-weight: 800;
+      }
+    }
+
   </style>
 </head>
 
