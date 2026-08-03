@@ -1,0 +1,14 @@
+{
+  "name": "pilas-cancha-stock",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dashboard de pilas en stock publicado en Cloudflare Workers",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
