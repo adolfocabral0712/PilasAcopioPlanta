@@ -1056,7 +1056,9 @@
       btnLimpiar: document.getElementById("btnLimpiar"),
       cuerpoTabla: document.getElementById("cuerpoTabla"),
       cantidadMostrada: document.getElementById("cantidadMostrada"),
-      cuerpoResumen: document.getElementById("cuerpoResumen")
+      cuerpoResumen: document.getElementById("cuerpoResumen"),
+      ordenFechaInicio: document.getElementById("ordenFechaInicio"),
+      indicadorOrdenFecha: document.getElementById("indicadorOrdenFecha")
     };
 
     // ============================================================
@@ -1713,11 +1715,64 @@
 
     }
 
+    function ordenarPorFechaInicio(datos) {
+      const copia = [...datos];
+
+      if (!ordenFechaInicio) {
+        return copia;
+      }
+
+      copia.sort((a, b) => {
+        const fechaA = convertirFecha(a.fechaInicio);
+        const fechaB = convertirFecha(b.fechaInicio);
+
+        if (!fechaA && !fechaB) {
+          return ordenarNatural(a.pila, b.pila);
+        }
+
+        if (!fechaA) {
+          return 1;
+        }
+
+        if (!fechaB) {
+          return -1;
+        }
+
+        const diferencia = fechaA.getTime() - fechaB.getTime();
+
+        if (diferencia === 0) {
+          return ordenarNatural(a.pila, b.pila);
+        }
+
+        return ordenFechaInicio === "asc"
+          ? diferencia
+          : -diferencia;
+      });
+
+      return copia;
+    }
+
+    function actualizarIndicadorOrdenFecha() {
+      if (!elementos.indicadorOrdenFecha) {
+        return;
+      }
+
+      elementos.indicadorOrdenFecha.textContent =
+        ordenFechaInicio === "asc"
+          ? "▲"
+          : ordenFechaInicio === "desc"
+            ? "▼"
+            : "↕";
+    }
+
     function actualizarVista() {
       const filtrados = obtenerDatosFiltrados();
-      actualizarKpis(filtrados);
-      renderizarTabla(filtrados);
-      renderizarResumenOrigenProducto(filtrados);
+      const ordenados = ordenarPorFechaInicio(filtrados);
+
+      actualizarKpis(ordenados);
+      renderizarTabla(ordenados);
+      renderizarResumenOrigenProducto(ordenados);
+      actualizarIndicadorOrdenFecha();
     }
 
     function mostrarEstado(mensaje, esError = false) {
@@ -1799,6 +1854,18 @@
       elementos.filtroProducto.value = "";
       actualizarVista();
     });
+
+    elementos.ordenFechaInicio?.addEventListener(
+      "click",
+      () => {
+        ordenFechaInicio =
+          ordenFechaInicio === "asc"
+            ? "desc"
+            : "asc";
+
+        actualizarVista();
+      }
+    );
 
     cargarDashboard();
   </script>
